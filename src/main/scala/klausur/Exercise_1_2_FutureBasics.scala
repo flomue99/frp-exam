@@ -2,7 +2,7 @@ package klausur
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Random, Success}
 
 object Parallel {
   def doInParallel(codeBlockA: => Unit, codeBlockB: => Unit): Future[Unit] = {
@@ -106,5 +106,25 @@ object Parallel {
     case Failure(ex) => println(s"An error occurred: ${ex.getMessage}")
   }
 
+  val items = Seq.fill(40)(Random.nextInt)
+  //val partitions = items.grouped(items.length / 2).toSeq
+  val tupple = items.splitAt(items.length / 2)
+  val sortedFuture = doInParallel(
+    Future {
+      tupple._1.sortWith((a, b) => a < b)
+    },
+    Future {
+      tupple._2.sortWith((a, b) => a < b)
+    }
+  )
+
+  sortedFuture.onComplete {
+    case Success((s1, s2)) => println(s"$s1, $s2")
+    case Failure(ex) => println(s"An error occurred: ${ex.getMessage}")
+  }
+
+
   Thread.sleep(10000)
+
+
 }
